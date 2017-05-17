@@ -17,7 +17,7 @@
   `source venv/bin/activate`
 
 
-#### 4-Install requires libraries
+#### 4-Install required libraries
 
 
   `pip install -r required-libs.txt`
