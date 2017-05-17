@@ -1,29 +1,29 @@
 # QattaBot
 
-How to install QattaBot in your server or computer.
+###How to install QattaBot in your server or computer.
 
-1-Make sure you add your bot token in QattaBot.py, line:196.
-
-
-2-Create virtualenv to avoid future conflicts:
+####1-Make sure you add your bot token in QattaBot.py, line:196.
 
 
-  virtualenv venv
+####2-Create virtualenv to avoid future conflicts:
 
 
-3-Change the py source to venv
+  `virtualenv venv`
 
 
-  source venv/bin/activate
+####3-Change the py source to venv
 
 
-4-Install requires libraries
+  `source venv/bin/activate`
 
 
-  pip install -r required-libs.txt
+####4-Install requires libraries
 
 
-5-Run it
+  `pip install -r required-libs.txt`
 
 
-  nohup python QattaBot.py &
+####5-Run it
+
+
+  `nohup python QattaBot.py &`
