@@ -14,55 +14,86 @@ logger = logging.getLogger(__name__)
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
-    update.message.reply_text("Hi!")
+    update.message.reply_text("""
+        Hello There!
+This is QattaBot, I'm going to count all the expenses of this group for each member.
+
+
+[+]How to add expense:
+    /add Value Description
+    For example: /add 200 dinner
+
+
+[+]How to view the expenses you have recorded
+    /listself
+
+
+[+]How to view the expenses that one of group members have recorded
+    /listmember user
+    For example: /listmember @Hamoud
+
+
+[+]Wipe your records
+    /wipeself
+
+And there's more great commands waiting for ya.
+        
+        Devs:
+            @HamoudAQ
+            @jgjc222
+
+        """)
+
+    try:
+        QattaDB.Chat.create(chat=CID)
+        print("chat created")#debugging
+    except:
+        print("chat exists")#debugging
+        pass
 
 def add(bot, update, args):
     CID = update.message.chat.id
     UID = update.message.from_user.id
     try:
-        counter = float(args[0]);
-        des = str(args[1]);
+        value = float(args[0])#First argument is the value of the expense
+        des = args[1];##Second argument is the description of the expense
     except:
-        update.message.reply_text("try again!")
+        update.message.reply_text("data format is incorrect!")
         return
+    
+    #we can eliminate this by moving it to start() and add all users at once, but what if somebody join after /start?...
     try:
         QattaDB.User.create(user=UID,name=update.message.from_user.username)
-        print("user created")
     except:
-        print("user exists")
-        pass
-    try:
-        QattaDB.Chat.create(chat=CID)
-        print("chat created")
-    except:
-        print("chat exists")
-        pass
+        print("user exists") #debugging
+    
 
     countQuery = QattaDB.Count.select().where((QattaDB.Count.user_id==UID) & (QattaDB.Count.chat_id==CID))
-    entryQuery = QattaDB.Entry.create(user_id=UID,chat_id=CID,entry=counter,desc=des)
+    entryQuery = QattaDB.Entry.create(user_id=UID,chat_id=CID,entry=value,desc=des)
 
-    if not countQuery: ##not found
-        QattaDB.Count.create(user_id=UID,chat_id=CID,count=counter)
-        update.message.reply_text("Current balance: "+str(counter)+" SAR")
-    else: ##found
-        countQuery[0].count+=counter
+
+    #we can optimize the next block, but we are lazy to do so...
+    if not countQuery: #User has no balance for a particular chat
+        QattaDB.Count.create(user_id=UID,chat_id=CID,count=value) #create balance for the user
+        update.message.reply_text("Current balance: "+str(value)+" SAR") #you can change the currency from SAR to whatever you want...
+    else: #User already has a balance
+        countQuery[0].count+=value
         countQuery[0].save()
-        update.message.reply_text("Current balance: "+str(countQuery[0].count)+" SAR")
+        update.message.reply_text("Current balance: "+str(countQuery[0].count)+" SAR") #you can change the currency from SAR to whatever you want...
 
 def wipeself(bot, update):
     CID = update.message.chat.id
     UID = update.message.from_user.id
     query = QattaDB.Count.select().where((QattaDB.Count.user_id==UID) & (QattaDB.Count.chat_id==CID))
-    if not query: ##not found
-        QattaDB.Count.create(user_id=UID,chat_id=CID,count=0)
-    else: ##found
+    if query: #if he had a balance to be wiped!
         query[0].count=0
         query[0].save()
+        (QattaDB.Entry.delete().where((QattaDB.Entry.user_id==UID) & (QattaDB.Entry.chat_id==CID))).execute() #this will eliminate all the associated entries!
+    
+
     update.message.reply_text("Current balance: 0 SAR")
-    #try:
-    (QattaDB.Entry.delete().where((QattaDB.Entry.user_id==UID) & (QattaDB.Entry.chat_id==CID))).execute()
-    #except:
-    #    pass
+
+
 
 def wipechat(bot, update):
     CID = update.message.chat.id
@@ -96,9 +127,11 @@ def listself(bot, update):
 def listmember(bot, update, args):
     CID = update.message.chat.id
     try:
-        UID = QattaDB.User.get(name=args[0]).user
+        userWithNoAt=args[0].replace("@","")
+
+        UID = QattaDB.User.get(name=userWithNoAt).user
     except:
-        update.message.reply_text("User doesn't exist in chat!")
+        update.message.reply_text("User doesn't exist in chat or have not added any expenses!")
         return
 
     query = QattaDB.Entry.select().where((QattaDB.Entry.user_id==UID) & (QattaDB.Entry.chat_id==CID))
@@ -123,7 +156,36 @@ def listchat(bot, update):
     update.message.reply_text(message)
 
 def help(bot, update):
-    update.message.reply_text("I've got nothing to say.")
+    update.message.reply_text(
+"""
+        Hello There!
+This is QattaBot, I'm going to count all the expenses of this group for each member.
+
+
+[+]How to add expense:
+    /add Value Description
+    For example: /add 200 dinner
+
+
+[+]How to view the expenses you have recorded
+    /listself
+
+
+[+]How to view the expenses that one of group members have recorded
+    /listmember user
+    For example: /listmember @Hamoud
+
+
+[+]Wipe your records
+    /wipeself
+
+And there's more great commands waiting for ya.
+        
+        Devs:
+            @HamoudAQ
+            @jgjc222
+
+        """)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
@@ -131,7 +193,7 @@ def error(bot, update, error):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("270579648:AAHoc3yC2fevhKn7H211ZDOrEGtSslmEN0E")
+    updater = Updater("TOKEN")
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher

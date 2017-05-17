@@ -1,6 +1,7 @@
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 import datetime
+import os.path
 
 db = SqliteExtDatabase('QattaDB.db')
 
@@ -24,7 +25,14 @@ class Entry(BaseModel):
     user = ForeignKeyField(User)
     chat = ForeignKeyField(Chat)
     entry = DoubleField()
-    desc = CharField()
+    desc = TextField()
     date = DateTimeField(default=datetime.datetime.now)
 
-#db.create_tables([User, Chat, Count, Entry])
+
+
+
+db_file=os.path.isfile('QattaDB.db')
+if not db_file: #if you changed the DB model then don't forget to delete the QattaDB.db file
+    db.create_tables([User, Chat, Count, Entry])
+
+
